@@ -1,0 +1,1301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Admin Panel - Beulrock SS</title>
+    
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Admin Panel Specific Styles -->
+    <style>
+        body {
+            background-color: var(--bg-body);
+            min-height: 100vh;
+        }
+
+        body.bg-image-enabled {
+            background-image: url('f5c57c5f-0209-4292-b7e8-f30aa3d705ab.jpg'), var(--gradient-bg);
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-blend-mode: hard-light;
+        }
+
+        body::before {
+            content: '';
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: -1;
+        }
+
+        /* --- ADMIN LAYOUT --- */
+        .admin-layout {
+            display: flex;
+            gap: 2rem;
+            margin: 2rem 0;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        /* --- SIDEBAR --- */
+        .sidebar {
+            width: 280px;
+            flex-shrink: 0;
+            background: var(--bg-glass);
+            backdrop-filter: blur(8px);
+            border-radius: var(--radius-xl);
+            padding: 1.5rem;
+            border: 1px solid var(--border-light);
+            height: fit-content;
+            position: sticky;
+            top: 100px;
+        }
+
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .sidebar-header h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #dc2626, #7f1d1d);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .admin-badge {
+            background: #dc2626;
+            color: white;
+            padding: 0.2rem 0.6rem;
+            border-radius: var(--radius-full);
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 0 10px rgba(220, 38, 38, 0.5);
+        }
+
+        .sidebar-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            border-radius: var(--radius-md);
+            color: var(--text-muted);
+            transition: var(--transition-fast);
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .nav-item i {
+            width: 1.25rem;
+            font-size: 1rem;
+        }
+
+        .nav-item.active, .nav-item:hover {
+            background: rgba(220, 38, 38, 0.15);
+            color: var(--primary);
+            border-left: 3px solid var(--primary);
+        }
+
+        .nav-divider {
+            margin: 1rem 0;
+            border-top: 1px solid var(--border-light);
+        }
+
+        /* --- MAIN CONTENT --- */
+        .main-content {
+            flex: 1;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-light);
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .page-title h1 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-bottom: 0.25rem;
+            text-transform: uppercase;
+            letter-spacing: -0.5px;
+        }
+
+        .page-title p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .page-actions {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        /* --- TABS --- */
+        .tabs-container {
+            background: var(--bg-glass);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-md);
+            padding: 0.5rem;
+            display: inline-flex;
+            gap: 0.25rem;
+            margin-bottom: 2rem;
+        }
+
+        .tab-btn {
+            padding: 0.6rem 1.5rem;
+            background: transparent;
+            border: none;
+            border-radius: var(--radius-sm);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition-fast);
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #dc2626, #7f1d1d);
+            color: white;
+            box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
+        }
+
+        .tab-btn:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* --- STATS CARDS --- */
+        .admin-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card-admin {
+            background: var(--bg-glass);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+            transition: var(--transition-normal);
+        }
+
+        .stat-card-admin:hover {
+            border-color: var(--primary);
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .stat-card-admin::before {
+            content: '';
+            position: absolute;
+            top: 0; right: 0;
+            width: 60px; height: 60px;
+            background: radial-gradient(circle, rgba(220, 38, 38, 0.15), transparent 70%);
+            filter: blur(20px);
+        }
+
+        .stat-icon {
+            width: 45px;
+            height: 45px;
+            background: rgba(220, 38, 38, 0.1);
+            border-radius: var(--radius-md);
+            display: grid;
+            place-items: center;
+            color: var(--primary);
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+
+        .stat-card-admin h3 {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card-admin .value {
+            font-size: 2rem;
+            font-weight: 800;
+            color: white;
+        }
+
+        .stat-change {
+            font-size: 0.75rem;
+            margin-top: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .stat-change.positive { color: #10b981; }
+        .stat-change.negative { color: #ef4444; }
+
+        /* --- CARD PANELS --- */
+        .card-panel {
+            background: var(--bg-glass);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .card-panel-header h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* --- KEY GENERATION FORM --- */
+        .key-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            align-items: end;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-group label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-control {
+            padding: 0.8rem 1rem;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-md);
+            color: white;
+            font-size: 0.9rem;
+            transition: var(--transition-fast);
+        }
+
+        .form-control:focus {
+            border-color: var(--primary);
+            background: rgba(0, 0, 0, 0.6);
+            box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.2);
+            outline: none;
+        }
+
+        .btn {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition-fast);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #dc2626, #7f1d1d);
+            color: white;
+            box-shadow: 0 4px 15px rgba(220, 38, 38, 0.3);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(220, 38, 38, 0.5);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            font-size: 0.8rem;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #dc2626, #991b1b);
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+
+        /* --- DATA TABLE --- */
+        .table-container {
+            overflow-x: auto;
+            border-radius: var(--radius-md);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .data-table thead {
+            background: rgba(220, 38, 38, 0.1);
+        }
+
+        .data-table th {
+            padding: 1rem;
+            text-align: left;
+            font-weight: 700;
+            color: white;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid var(--border-light);
+        }
+
+        .data-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-light);
+            color: #cbd5e6;
+        }
+
+        .data-table tbody tr {
+            transition: var(--transition-fast);
+        }
+
+        .data-table tbody tr:hover {
+            background: rgba(220, 38, 38, 0.05);
+        }
+
+        .data-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Role Badges */
+        .role-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: var(--radius-full);
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .role-admin {
+            background: linear-gradient(135deg, #dc2626, #7f1d1d);
+            color: white;
+        }
+
+        .role-user {
+            background: rgba(156, 163, 175, 0.2);
+            color: #9ca3af;
+        }
+
+        .role-premium {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            color: #000;
+        }
+
+        /* --- GENERATED KEYS DISPLAY --- */
+        .keys-display {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-md);
+            padding: 1rem;
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .keys-display.show {
+            display: block;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .keys-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .key-item {
+            background: rgba(220, 38, 38, 0.1);
+            border: 1px solid rgba(220, 38, 38, 0.3);
+            border-radius: var(--radius-md);
+            padding: 0.75rem 1rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            color: var(--primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .key-item .copy-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: 0.2s;
+            padding: 4px;
+        }
+
+        .key-item .copy-btn:hover {
+            color: var(--primary);
+        }
+
+        /* --- TAB CONTENT --- */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        /* --- ACTIVITY LOG --- */
+        .activity-log {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        .log-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .log-item:last-child {
+            border-bottom: none;
+        }
+
+        .log-icon {
+            width: 36px;
+            height: 36px;
+            background: rgba(220, 38, 38, 0.15);
+            color: var(--primary);
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            font-size: 0.9rem;
+        }
+
+        .log-content {
+            flex: 1;
+        }
+
+        .log-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: white;
+        }
+
+        .log-meta {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .log-time {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* --- MODAL --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            opacity: 0;
+            visibility: hidden;
+            transition: var(--transition-normal);
+        }
+
+        .modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: var(--bg-glass);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-xl);
+            padding: 2rem;
+            width: 90%;
+            max-width: 450px;
+            transform: scale(0.9);
+            transition: var(--transition-normal);
+        }
+
+        .modal-overlay.show .modal {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .modal-header h3 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        .modal-close {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .modal-close:hover {
+            color: var(--primary);
+        }
+
+        .modal-body {
+            margin-bottom: 1.5rem;
+            color: #cbd5e6;
+            line-height: 1.6;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: flex-end;
+        }
+
+        /* --- TOAST --- */
+        #toast-container {
+            position: fixed;
+            top: 20px; right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            background: rgba(20, 20, 23, 0.95);
+            backdrop-filter: blur(10px);
+            border-left: 4px solid var(--primary);
+            padding: 16px 24px;
+            border-radius: var(--radius-md);
+            color: white;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            animation: slideInRight 0.3s forwards;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+            min-width: 280px;
+        }
+
+        .toast.success { border-left-color: #10b981; }
+        .toast.error { border-left-color: #ef4444; }
+        .toast.warning { border-left-color: #fbbf24; }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 900px) {
+            .admin-layout {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                position: static;
+            }
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .key-form {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; } to { opacity: 1; }
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-image-enabled">
+    <div class="container">
+        <!-- Navbar -->
+        <nav class="navbar">
+            <div class="logo">
+                <i class="fas fa-shield-alt" style="color:var(--primary); margin-right:10px;"></i>
+                BEULROCK ADMIN
+            </div>
+            <div class="nav-links">
+                <a href="dashboard.html">Dashboard</a>
+                <a href="admin.html" class="active">Admin</a>
+                <a href="#" id="logoutBtn" class="btn-outline btn-sm">Logout</a>
+            </div>
+        </nav>
+
+        <!-- Admin Layout -->
+        <div class="admin-layout">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <div class="sidebar-header">
+                    <h3>Admin Panel</h3>
+                    <div class="admin-badge">v2.0</div>
+                </div>
+                <nav class="sidebar-nav">
+                    <a href="#" class="nav-item active" data-tab="overview">
+                        <i class="fas fa-chart-line"></i> Overview
+                    </a>
+                    <a href="#" class="nav-item" data-tab="users">
+                        <i class="fas fa-users"></i> Users
+                    </a>
+                    <a href="#" class="nav-item" data-tab="keys">
+                        <i class="fas fa-key"></i> Key Management
+                    </a>
+                    <a href="#" class="nav-item" data-tab="logs">
+                        <i class="fas fa-history"></i> Activity Logs
+                    </a>
+                    <div class="nav-divider"></div>
+                    <a href="#" class="nav-item" data-tab="settings">
+                        <i class="fas fa-cog"></i> Settings
+                    </a>
+                </nav>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="main-content">
+                <!-- Page Header -->
+                <div class="page-header">
+                    <div class="page-title">
+                        <h1 id="pageTitle">Overview</h1>
+                        <p id="pageSubtitle">System statistics and quick actions</p>
+                    </div>
+                    <div class="page-actions">
+                        <button class="btn btn-primary btn-sm" id="refreshBtn">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+
+                <!-- TAB: OVERVIEW -->
+                <div class="tab-content active" id="tab-overview">
+                    <!-- Stats Cards -->
+                    <div class="admin-stats">
+                        <div class="stat-card-admin">
+                            <div class="stat-icon"><i class="fas fa-users"></i></div>
+                            <h3>Total Users</h3>
+                            <div class="value" id="totalUsers">0</div>
+                            <div class="stat-change positive"><i class="fas fa-arrow-up"></i> +12% this week</div>
+                        </div>
+                        <div class="stat-card-admin">
+                            <div class="stat-icon"><i class="fas fa-shield-alt"></i></div>
+                            <h3>Whitelisted</h3>
+                            <div class="value" id="totalWhitelist">0</div>
+                            <div class="stat-change positive"><i class="fas fa-arrow-up"></i> +8% this week</div>
+                        </div>
+                        <div class="stat-card-admin">
+                            <div class="stat-icon"><i class="fas fa-key"></i></div>
+                            <h3>Redeem Keys</h3>
+                            <div class="value" id="totalKeys">0</div>
+                            <div class="stat-change positive"><i class="fas fa-arrow-up"></i> +5% this week</div>
+                        </div>
+                        <div class="stat-card-admin">
+                            <div class="stat-icon"><i class="fas fa-server"></i></div>
+                            <h3>System Uptime</h3>
+                            <div class="value">99.9%</div>
+                            <div class="stat-change positive"><i class="fas fa-check"></i> All systems go</div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="card-panel">
+                        <div class="card-panel-header">
+                            <h3><i class="fas fa-bolt" style="color:var(--primary)"></i> Quick Actions</h3>
+                        </div>
+                        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:1rem;">
+                            <button class="btn btn-primary" data-action="generate-key">
+                                <i class="fas fa-key"></i> Generate Key
+                            </button>
+                            <button class="btn btn-primary" data-action="add-user">
+                                <i class="fas fa-user-plus"></i> Add User
+                            </button>
+                            <button class="btn btn-primary" data-action="clear-cache">
+                                <i class="fas fa-broom"></i> Clear Cache
+                            </button>
+                            <button class="btn btn-danger" data-action="maintenance">
+                                <i class="fas fa-power-off"></i> Maintenance
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: USERS -->
+                <div class="tab-content" id="tab-users">
+                    <div class="card-panel">
+                        <div class="card-panel-header">
+                            <h3><i class="fas fa-users" style="color:var(--primary)"></i> User Management</h3>
+                            <div style="display:flex; gap:0.5rem;">
+                                <input type="text" class="form-control btn-sm" id="userSearch" placeholder="Search users...">
+                                <button class="btn btn-primary btn-sm" id="addUserBtn">
+                                    <i class="fas fa-plus"></i> Add
+                                </button>
+                            </div>
+                        </div>
+                        <div class="table-container">
+                            <table class="data-table" id="usersTable">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Username</th>
+                                        <th>Email</th>
+                                        <th>Role</th>
+                                        <th>Whitelist</th>
+                                        <th>Joined</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td colspan="7" style="text-align:center; padding:2rem;">Loading users...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: KEYS -->
+                <div class="tab-content" id="tab-keys">
+                    <div class="card-panel">
+                        <div class="card-panel-header">
+                            <h3><i class="fas fa-key" style="color:var(--primary)"></i> Key Generation</h3>
+                        </div>
+                        <form id="keyForm" class="key-form">
+                            <div class="form-group">
+                                <label>Tier</label>
+                                <select class="form-control" id="keyTier">
+                                    <option value="basic">Basic</option>
+                                    <option value="premium">Premium</option>
+                                    <option value="ultimate">Ultimate</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Quantity</label>
+                                <input type="number" class="form-control" id="keyQuantity" value="1" min="1" max="50">
+                            </div>
+                            <div class="form-group">
+                                <label>Days Valid</label>
+                                <select class="form-control" id="keyDays">
+                                    <option value="30">30 Days</option>
+                                    <option value="90">90 Days</option>
+                                    <option value="365">1 Year</option>
+                                    <option value="0">Lifetime</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary" id="generateKeyBtn">
+                                <i class="fas fa-magic"></i> Generate Keys
+                            </button>
+                        </form>
+
+                        <!-- Generated Keys Display -->
+                        <div class="keys-display" id="keysDisplay">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <h4 style="margin:0; color:white;">Generated Keys</h4>
+                                <button class="btn btn-sm btn-outline" id="closeKeysDisplay">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <div class="keys-grid" id="keysGrid"></div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Keys -->
+                    <div class="card-panel">
+                        <div class="card-panel-header">
+                            <h3><i class="fas fa-clock" style="color:var(--primary)"></i> Recently Generated Keys</h3>
+                        </div>
+                        <div class="table-container">
+                            <table class="data-table" id="recentKeysTable">
+                                <thead>
+                                    <tr>
+                                        <th>Key</th>
+                                        <th>Tier</th>
+                                        <th>Generated By</th>
+                                        <th>Date</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td colspan="5" style="text-align:center; padding:2rem;">No recent keys</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: LOGS -->
+                <div class="tab-content" id="tab-logs">
+                    <div class="card-panel">
+                        <div class="card-panel-header">
+                            <h3><i class="fas fa-history" style="color:var(--primary)"></i> Activity Logs</h3>
+                            <div style="display:flex; gap:0.5rem;">
+                                <select class="form-control btn-sm" id="logFilter">
+                                    <option value="all">All Actions</option>
+                                    <option value="user">User Actions</option>
+                                    <option value="system">System Actions</option>
+                                    <option value="security">Security Events</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="activity-log" id="activityLog">
+                            <div style="text-align:center; padding:2rem; color:var(--text-muted);">Loading logs...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: SETTINGS -->
+                <div class="tab-content" id="tab-settings">
+                    <div class="card-panel">
+                        <div class="card-panel-header">
+                            <h3><i class="fas fa-cog" style="color:var(--primary)"></i> Admin Settings</h3>
+                        </div>
+                        <form id="settingsForm">
+                            <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:1.5rem; margin-bottom:1.5rem;">
+                                <div class="form-group">
+                                    <label>Site Name</label>
+                                    <input type="text" class="form-control" value="Beulrock SS">
+                                </div>
+                                <div class="form-group">
+                                    <label>Support Email</label>
+                                    <input type="email" class="form-control" value="support@beulrock.com">
+                                </div>
+                                <div class="form-group">
+                                    <label>Registration</label>
+                                    <select class="form-control">
+                                        <option value="open">Open</option>
+                                        <option value="invite">Invite Only</option>
+                                        <option value="closed">Closed</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Maintenance Mode</label>
+                                    <select class="form-control">
+                                        <option value="off">Disabled</option>
+                                        <option value="on">Enabled</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Save Settings
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container"></div>
+
+    <!-- Confirmation Modal -->
+    <div class="modal-overlay" id="confirmModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="modalTitle">Confirm Action</h3>
+                <button class="modal-close" id="modalClose"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                Are you sure you want to perform this action?
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-outline" id="modalCancel">Cancel</button>
+                <button class="btn btn-danger" id="modalConfirm">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Import from utils
+        import { getToken, logout } from './js/utils.js';
+
+        // Require authentication
+        const token = getToken();
+        if (!token) {
+            window.location.href = 'login.html';
+        }
+
+        // --- NAVIGATION TABS ---
+        const tabs = document.querySelectorAll('.nav-item[data-tab]');
+        const tabContents = document.querySelectorAll('.tab-content');
+        const pageTitle = document.getElementById('pageTitle');
+        const pageSubtitle = document.getElementById('pageSubtitle');
+
+        const tabInfo = {
+            overview: { title: 'Overview', subtitle: 'System statistics and quick actions' },
+            users: { title: 'User Management', subtitle: 'Manage all registered users' },
+            keys: { title: 'Key Management', subtitle: 'Generate and manage redeem keys' },
+            logs: { title: 'Activity Logs', subtitle: 'Track system and user activities' },
+            settings: { title: 'Admin Settings', subtitle: 'Configure system preferences' }
+        };
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabName = tab.dataset.tab;
+                
+                // Update active states
+                tabs.forEach(t => t.classList.remove('active'));
+                tabContents.forEach(c => c.classList.remove('active'));
+                
+                tab.classList.add('active');
+                document.getElementById(`tab-${tabName}`).classList.add('active');
+                
+                // Update page header
+                pageTitle.textContent = tabInfo[tabName].title;
+                pageSubtitle.textContent = tabInfo[tabName].subtitle;
+            });
+        });
+
+        // --- MOCK DATA ---
+        let usersData = [
+            { id: 1, username: 'admin', email: 'admin@beulrock.com', role: 'admin', whitelist: 'ultimate', joined: '2024-01-01' },
+            { id: 2, username: 'beulrock', email: 'beulrock@test.com', role: 'premium', whitelist: 'premium', joined: '2024-01-15' },
+            { id: 3, username: 'testuser', email: 'test@test.com', role: 'user', whitelist: 'basic', joined: '2024-02-01' },
+            { id: 4, username: 'player123', email: 'player@test.com', role: 'user', whitelist: 'none', joined: '2024-02-10' },
+            { id: 5, username: 'gamer99', email: 'gamer@test.com', role: 'premium', whitelist: 'premium', joined: '2024-02-15' }
+        ];
+
+        let recentKeys = [];
+
+        let activityLogs = [
+            { title: 'User beulrock upgraded to Premium', type: 'user', time: '2 hours ago', icon: 'fa-user-upgrade' },
+            { title: 'Generated 5 Premium keys', type: 'system', time: '3 hours ago', icon: 'fa-key' },
+            { title: 'Failed login attempt for admin', type: 'security', time: '5 hours ago', icon: 'fa-exclamation-triangle' },
+            { title: 'New user registration: testuser', type: 'user', time: '1 day ago', icon: 'fa-user-plus' },
+            { title: 'System cache cleared', type: 'system', time: '2 days ago', icon: 'fa-broom' },
+            { title: 'Maintenance mode activated', type: 'system', time: '3 days ago', icon: 'fa-power-off' }
+        ];
+
+        // --- STATS UPDATE ---
+        function updateStats() {
+            document.getElementById('totalUsers').textContent = usersData.length;
+            document.getElementById('totalWhitelist').textContent = usersData.filter(u => u.whitelist !== 'none').length;
+            document.getElementById('totalKeys').textContent = recentKeys.length;
+        }
+
+        // --- RENDER USERS TABLE ---
+        function renderUsers(filter = '') {
+            const tbody = document.querySelector('#usersTable tbody');
+            const filtered = usersData.filter(u => 
+                u.username.toLowerCase().includes(filter.toLowerCase()) ||
+                u.email.toLowerCase().includes(filter.toLowerCase())
+            );
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:2rem;">No users found</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(user => `
+                <tr>
+                    <td>#${user.id}</td>
+                    <td><strong>${user.username}</strong></td>
+                    <td>${user.email}</td>
+                    <td><span class="role-badge role-${user.role}">${user.role}</span></td>
+                    <td><span class="role-badge" style="background:${user.whitelist !== 'none' ? 'rgba(220,38,38,0.2)' : 'rgba(156,163,175,0.2)'}; color:${user.whitelist !== 'none' ? '#dc2626' : '#9ca3af'};">${user.whitelist}</span></td>
+                    <td>${user.joined}</td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" onclick="showToast('Edit user: ${user.username}', 'info')">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="confirmAction('delete', '${user.username}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // User Search
+        document.getElementById('userSearch').addEventListener('input', (e) => {
+            renderUsers(e.target.value);
+        });
+
+        // --- KEY GENERATION ---
+        const keyForm = document.getElementById('keyForm');
+        const keysDisplay = document.getElementById('keysDisplay');
+        const keysGrid = document.getElementById('keysGrid');
+
+        keyForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const tier = document.getElementById('keyTier').value;
+            const quantity = parseInt(document.getElementById('keyQuantity').value);
+            
+            // Generate keys
+            const newKeys = [];
+            for (let i = 0; i < quantity; i++) {
+                const key = `${tier.toUpperCase()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}-${Date.now().toString(36).toUpperCase()}`;
+                newKeys.push(key);
+            }
+
+            // Add to recent keys
+            newKeys.forEach(key => {
+                recentKeys.unshift({
+                    key,
+                    tier,
+                    generatedBy: 'admin',
+                    date: new Date().toISOString().split('T')[0],
+                    status: 'unused'
+                });
+            });
+
+            // Display generated keys
+            keysGrid.innerHTML = newKeys.map(key => `
+                <div class="key-item">
+                    <span>${key}</span>
+                    <button class="copy-btn" onclick="copyToClipboard('${key}')">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+            `).join('');
+
+            keysDisplay.classList.add('show');
+            showToast(`Generated ${quantity} ${tier} key(s)!`, 'success');
+            
+            // Update stats
+            updateStats();
+            renderRecentKeys();
+        });
+
+        document.getElementById('closeKeysDisplay').addEventListener('click', () => {
+            keysDisplay.classList.remove('show');
+        });
+
+        function renderRecentKeys() {
+            const tbody = document.querySelector('#recentKeysTable tbody');
+            
+            if (recentKeys.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:2rem;">No recent keys</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = recentKeys.slice(0, 10).map(key => `
+                <tr>
+                    <td style="font-family:'Courier New', monospace; color:var(--primary);">${key.key.substring(0, 15)}...</td>
+                    <td><span class="role-badge" style="background:rgba(220,38,38,0.2); color:#dc2626;">${key.tier}</span></td>
+                    <td>${key.generatedBy}</td>
+                    <td>${key.date}</td>
+                    <td><span style="color:#10b981;">${key.status}</span></td>
+                </tr>
+            `).join('');
+        }
+
+        // --- ACTIVITY LOGS ---
+        function renderActivityLogs(filter = 'all') {
+            const container = document.getElementById('activityLog');
+            
+            const filtered = filter === 'all' 
+                ? activityLogs 
+                : activityLogs.filter(log => log.type === filter);
+
+            if (filtered.length === 0) {
+                container.innerHTML = '<div style="text-align:center; padding:2rem; color:var(--text-muted);">No logs found</div>';
+                return;
+            }
+
+            container.innerHTML = filtered.map(log => `
+                <div class="log-item">
+                    <div class="log-icon"><i class="fas ${log.icon}"></i></div>
+                    <div class="log-content">
+                        <div class="log-title">${log.title}</div>
+                        <div class="log-meta">${log.type} • ${log.time}</div>
+                    </div>
+                    <div class="log-time"><i class="fas fa-clock"></i></div>
+                </div>
+            `).join('');
+        }
+
+        document.getElementById('logFilter').addEventListener('change', (e) => {
+            renderActivityLogs(e.target.value);
+        });
+
+        // --- MODAL CONFIRMATION ---
+        const modal = document.getElementById('confirmModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalBody = document.getElementById('modalBody');
+        let pendingAction = null;
+
+        function confirmAction(action, target) {
+            pendingAction = { action, target };
+            modalTitle.textContent = `Confirm ${action}`;
+            modalBody.textContent = `Are you sure you want to ${action} ${target}? This action cannot be undone.`;
+            modal.classList.add('show');
+        }
+
+        document.getElementById('modalClose').addEventListener('click', () => {
+            modal.classList.remove('show');
+            pendingAction = null;
+        });
+
+        document.getElementById('modalCancel').addEventListener('click', () => {
+            modal.classList.remove('show');
+            pendingAction = null;
+        });
+
+        document.getElementById('modalConfirm').addEventListener('click', () => {
+            if (pendingAction && pendingAction.action === 'delete') {
+                usersData = usersData.filter(u => u.username !== pendingAction.target);
+                renderUsers(document.getElementById('userSearch').value);
+                updateStats();
+                showToast(`User ${pendingAction.target} deleted`, 'success');
+            }
+            modal.classList.remove('show');
+            pendingAction = null;
+        });
+
+        // --- TOAST NOTIFICATION ---
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            const icons = {
+                success: '<i class="fas fa-check-circle"></i>',
+                error: '<i class="fas fa-exclamation-circle"></i>',
+                info: '<i class="fas fa-info-circle"></i>',
+                warning: '<i class="fas fa-exclamation-triangle"></i>'
+            };
+
+            toast.innerHTML = `${icons[type]} ${message}`;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                toast.style.transition = 'all 0.3s';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // --- COPY TO CLIPBOARD ---
+        window.copyToClipboard = function(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('Key copied to clipboard!', 'success');
+            });
+        };
+
+        // --- QUICK ACTIONS ---
+        document.querySelectorAll('[data-action]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const action = btn.dataset.action;
+                if (action === 'generate-key') {
+                    document.querySelector('[data-tab="keys"]').click();
+                } else if (action === 'add-user') {
+                    showToast('Add user feature coming soon!', 'info');
+                } else if (action === 'clear-cache') {
+                    showToast('Cache cleared successfully!', 'success');
+                } else if (action === 'maintenance') {
+                    showToast('Maintenance mode activated!', 'warning');
+                }
+            });
+        });
+
+        // --- REFRESH ---
+        document.getElementById('refreshBtn').addEventListener('click', () => {
+            showToast('Refreshing data...', 'info');
+            setTimeout(() => {
+                updateStats();
+                showToast('Data refreshed!', 'success');
+            }, 1000);
+        });
+
+        // --- SETTINGS FORM ---
+        document.getElementById('settingsForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            showToast('Settings saved successfully!', 'success');
+        });
+
+        // --- LOGOUT ---
+        document.getElementById('logoutBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            logout();
+        });
+
+        // --- INITIALIZE ---
+        updateStats();
+        renderUsers();
+        renderRecentKeys();
+        renderActivityLogs();
+
+        // Global functions for inline handlers
+        window.showToast = showToast;
+        window.confirmAction = confirmAction;
+    </script>
+</body>
+</html>
