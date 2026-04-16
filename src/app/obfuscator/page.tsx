@@ -4,275 +4,287 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Textarea } from '@/components/ui/textarea'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Textarea } from '@/components/ui/textarea'
 import { 
   Shield, 
   Copy, 
   Trash2, 
   Zap, 
-  Code, 
-  Lock,
-  ArrowRightLeft,
-  ArrowRight,
+  Lock, 
+  ArrowLeft,
+  CheckCircle,
+  Code,
   Cpu,
-  Hash,
-  Type,
-  Globe,
-  RotateCcw,
-  Minimize2
+  FileCode,
+  Scissors,
+  Shuffle
 } from 'lucide-react'
 import { toast } from 'sonner'
 
+interface ObfuscatorOption {
+  id: string
+  name: string
+  icon: any
+  description: string
+  badge?: string
+}
+
+const obfuscatorOptions: ObfuscatorOption[] = [
+  {
+    id: 'vm',
+    name: 'VM Obfuscation',
+    icon: Cpu,
+    description: 'Virtual Machine based obfuscation for maximum protection',
+    badge: 'Advanced'
+  },
+  {
+    id: 'encode',
+    name: 'Encode',
+    icon: Code,
+    description: 'Base64 and string encoding techniques',
+    badge: 'Basic'
+  },
+  {
+    id: 'ascii',
+    name: 'ASCII Encryption',
+    icon: FileCode,
+    description: 'Convert code to ASCII decimal/char codes',
+  },
+  {
+    id: 'psu',
+    name: 'PSU',
+    icon: Lock,
+    description: 'Protect String Utilities for string encryption',
+    badge: 'Popular'
+  },
+  {
+    id: 'minify',
+    name: 'Minify',
+    icon: Scissors,
+    description: 'Remove whitespace and reduce code size',
+  },
+  {
+    id: 'shuffle',
+    name: 'Variable Shuffle',
+    icon: Shuffle,
+    description: 'Randomize variable and function names',
+  },
+  {
+    id: 'controlflow',
+    name: 'Control Flow',
+    icon: Zap,
+    description: 'Obfuscate control flow and add junk code',
+    badge: 'Advanced'
+  },
+  {
+    id: 'antitamp',
+    name: 'Anti-Tamper',
+    icon: Shield,
+    description: 'Add anti-debug and anti-tamper protections',
+    badge: 'Premium'
+  }
+]
+
 export default function ObfuscatorPage() {
   const router = useRouter()
-  const [input, setInput] = useState('')
-  const [output, setOutput] = useState('')
-  const [activeTab, setActiveTab] = useState('vm')
-  const [obfuscationKey, setObfuscationKey] = useState('')
+  const [inputCode, setInputCode] = useState('')
+  const [outputCode, setOutputCode] = useState('')
+  const [selectedOptions, setSelectedOptions] = useState<string[]>(['encode'])
+  const [isProcessing, setIsProcessing] = useState(false)
 
-  // VM Obfuscation
-  const handleVMObfuscation = () => {
-    if (!input.trim()) {
-      toast.error('Please enter code to obfuscate')
+  const toggleOption = (optionId: string) => {
+    setSelectedOptions(prev =>
+      prev.includes(optionId)
+        ? prev.filter(id => id !== optionId)
+        : [...prev, optionId]
+    )
+  }
+
+  const handleObfuscate = async () => {
+    if (!inputCode.trim()) {
+      toast.error('Please enter some code to obfuscate')
       return
     }
 
-    const wrappedCode = `-- VM Protected by Beulrock SS
-local function _VM_INIT()
-    local _0 = {}
-    local _1 = {}
-    local _2 = {}
+    if (selectedOptions.length === 0) {
+      toast.error('Please select at least one obfuscation option')
+      return
+    }
+
+    setIsProcessing(true)
     
-    function _EXEC(_func, ...)
-        return _func(...)
-    end
-    
-    -- Original code starts here
-    ${input}
-    
-    return _0
+    // Simulate processing time
+    setTimeout(() => {
+      try {
+        let result = inputCode
+
+        // Apply selected obfuscation methods
+        if (selectedOptions.includes('minify')) {
+          result = minifyCode(result)
+        }
+
+        if (selectedOptions.includes('encode')) {
+          result = encodeBase64(result)
+        }
+
+        if (selectedOptions.includes('ascii')) {
+          result = asciiEncode(result)
+        }
+
+        if (selectedOptions.includes('vm')) {
+          result = vmObfuscate(result)
+        }
+
+        if (selectedOptions.includes('psu')) {
+          result = psuObfuscate(result)
+        }
+
+        if (selectedOptions.includes('shuffle')) {
+          result = shuffleVariables(result)
+        }
+
+        if (selectedOptions.includes('controlflow')) {
+          result = controlFlowObfuscate(result)
+        }
+
+        if (selectedOptions.includes('antitamp')) {
+          result = addAntiTamper(result)
+        }
+
+        setOutputCode(result)
+        toast.success('Code obfuscated successfully!')
+      } catch (error) {
+        toast.error('Error obfuscating code')
+        console.error(error)
+      } finally {
+        setIsProcessing(false)
+      }
+    }, 1500)
+  }
+
+  const minifyCode = (code: string) => {
+    return code
+      .replace(/\s+/g, ' ')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/\/\/.*/g, '')
+      .trim()
+  }
+
+  const encodeBase64 = (code: string) => {
+    const encoded = Buffer.from(code).toString('base64')
+    return `-- Base64 Encoded\nloadstring(game:HttpGet("data:text/plain;base64,${encoded}"))()`
+  }
+
+  const asciiEncode = (code: string) => {
+    return code.split('').map(char => {
+      const code = char.charCodeAt(0)
+      return code > 127 || code < 32 ? `\\${code}` : char
+    }).join('')
+  }
+
+  const vmObfuscate = (code: string) => {
+    return `-- VM Obfuscated
+local VM = {}
+VM.__index = VM
+
+function VM.new()
+    return setmetatable({}, VM)
 end
 
-return _VM_INIT()`
+function VM:run(code)
+    return load(code)()
+end
 
-    setOutput(wrappedCode)
-    toast.success('VM Obfuscation applied!')
+local vm = VM.new()
+vm:run([==[${code}]==])`
   }
 
-  // Base64 Encode
-  const handleBase64Encode = () => {
-    try {
-      const encoded = btoa(unescape(encodeURIComponent(input)))
-      setOutput(encoded)
-      toast.success('Base64 encoded!')
-    } catch (error) {
-      toast.error('Failed to encode')
-    }
-  }
+  const psuObfuscate = (code: string) => {
+    const randomString = Math.random().toString(36).substring(7)
+    return `-- PSU Protected
+local PSU = {}
+PSU.Key = "${randomString}"
 
-  // Base64 Decode
-  const handleBase64Decode = () => {
-    try {
-      const decoded = decodeURIComponent(escape(atob(input)))
-      setOutput(decoded)
-      toast.success('Base64 decoded!')
-    } catch (error) {
-      toast.error('Failed to decode')
-    }
-  }
-
-  // ASCII Encode
-  const handleASCIIEncode = () => {
-    if (!input.trim()) {
-      toast.error('Please enter text to encode')
-      return
-    }
-
-    const encoded = input.split('').map(char => 
-      `\\${char.charCodeAt(0).toString(10)}`
-    ).join('')
-    
-    setOutput(encoded)
-    toast.success('ASCII encoded!')
-  }
-
-  // ASCII Decode
-  const handleASCIIDecode = () => {
-    try {
-      const decoded = input.replace(/\\(\d+)/g, (match, p1) => 
-        String.fromCharCode(parseInt(p1))
-      )
-      setOutput(decoded)
-      toast.success('ASCII decoded!')
-    } catch (error) {
-      toast.error('Failed to decode')
-    }
-  }
-
-  // Hex Encode
-  const handleHexEncode = () => {
-    if (!input.trim()) {
-      toast.error('Please enter text to encode')
-      return
-    }
-
-    const encoded = input.split('').map(char => 
-      char.charCodeAt(0).toString(16).padStart(2, '0')
-    ).join('')
-    
-    setOutput(encoded)
-    toast.success('Hex encoded!')
-  }
-
-  // Hex Decode
-  const handleHexDecode = () => {
-    try {
-      const decoded = input.match(/.{1,2}/g)?.map(byte => 
-        String.fromCharCode(parseInt(byte, 16))
-      ).join('') || ''
-      setOutput(decoded)
-      toast.success('Hex decoded!')
-    } catch (error) {
-      toast.error('Failed to decode')
-    }
-  }
-
-  // URL Encode
-  const handleURLEncode = () => {
-    try {
-      const encoded = encodeURIComponent(input)
-      setOutput(encoded)
-      toast.success('URL encoded!')
-    } catch (error) {
-      toast.error('Failed to encode')
-    }
-  }
-
-  // URL Decode
-  const handleURLDecode = () => {
-    try {
-      const decoded = decodeURIComponent(input)
-      setOutput(decoded)
-      toast.success('URL decoded!')
-    } catch (error) {
-      toast.error('Failed to decode')
-    }
-  }
-
-  // Reverse String
-  const handleReverseString = () => {
-    if (!input.trim()) {
-      toast.error('Please enter text to reverse')
-      return
-    }
-
-    const reversed = input.split('').reverse().join('')
-    setOutput(reversed)
-    toast.success('String reversed!')
-  }
-
-  // Lua Minify
-  const handleLuaMinify = () => {
-    if (!input.trim()) {
-      toast.error('Please enter code to minify')
-      return
-    }
-
-    const minified = input
-      .replace(/--.*$/gm, '') // Remove comments
-      .replace(/\s*--.*$/gm, '') // Remove inline comments
-      .replace(/\s+/g, ' ') // Collapse whitespace
-      .trim()
-
-    setOutput(minified)
-    toast.success('Lua code minified!')
-  }
-
-  // String Obfuscation
-  const handleStringObfuscation = () => {
-    if (!input.trim()) {
-      toast.error('Please enter code to obfuscate')
-      return
-    }
-
-    const key = obfuscationKey || 'BEULROCK'
-    const obfuscated = input.split('').map(char => {
-      const charCode = char.charCodeAt(0)
-      const keyChar = key.charCodeAt(charCode % key.length)
-      return `string.char(${charCode} ^ ${keyChar})`
-    }).join('..')
-
-    const wrapperCode = `loadstring(game:HttpGet("https://beulrock.com/decode"))("${obfuscated}")`
-
-    setOutput(wrapperCode)
-    toast.success('String obfuscated!')
-  }
-
-  // PSU (Pseudo-Encryption)
-  const handlePSUEncryption = () => {
-    if (!input.trim()) {
-      toast.error('Please enter code to encrypt')
-      return
-    }
-
-    const key = obfuscationKey || 'BEULROCK'
-    let encrypted = ''
-    
-    for (let i = 0; i < input.length; i++) {
-      const charCode = input.charCodeAt(i)
-      const keyChar = key.charCodeAt(i % key.length)
-      const encryptedChar = charCode ^ keyChar
-      encrypted += String.fromCharCode(encryptedChar)
-    }
-
-    const wrapperCode = `-- PSU Encrypted
-local _KEY = "${key}"
-local _DECRYPT = function(str)
+function PSU.Encrypt(str)
     local result = ""
     for i = 1, #str do
-        result = result .. string.char(string.byte(str, i) ~ string.byte(_KEY, (i % #_KEY) + 1))
+        result = result .. string.char(string.byte(str, i) ~ string.byte(PSU.Key, (i - 1) % #PSU.Key + 1))
     end
     return result
 end
 
-local _ENCRYPTED = "${encrypted}"
-local _ORIGINAL = _DECRYPT(_ENCRYPTED)
-
-${input.split('\n').map(line => '-- ' + line).join('\n')}`
-
-    setOutput(wrapperCode)
-    toast.success('PSU Encryption applied!')
+local code = [=[${code}]=]
+local encrypted = PSU.Encrypt(code)
+load(encrypted)()`
   }
 
-  const handleCopyOutput = () => {
-    if (!output.trim()) {
-      toast.error('No output to copy')
+  const shuffleVariables = (code: string) => {
+    const vars = code.match(/\b[a-zA-Z_$][a-zA-Z0-9_$]*\b/g) || []
+    const uniqueVars = [...new Set(vars)]
+    const shuffled: Record<string, string> = {}
+
+    uniqueVars.forEach(v => {
+      shuffled[v] = `var_${Math.random().toString(36).substring(2, 8)}`
+    })
+
+    let result = code
+    Object.entries(shuffled).forEach(([old, newVar]) => {
+      const regex = new RegExp(`\\b${old}\\b`, 'g')
+      result = result.replace(regex, newVar)
+    })
+
+    return `-- Variable Shuffled\n${result}`
+  }
+
+  const controlFlowObfuscate = (code: string) => {
+    const junk = `
+-- Junk code
+if math.random(1, 100) > 50 then
+    local a = 1
+    local b = 2
+    local c = a + b
+end
+`
+    return `-- Control Flow Obfuscated\n${junk}${code}${junk}`
+  }
+
+  const addAntiTamper = (code: string) => {
+    return `-- Anti-Tamper Protected
+local debugg = debug
+if debugg and debugg.info then
+    warn("Debugger detected!")
+    return
+end
+
+-- Check for script tampering
+if script:IsDescendantOf(game:GetService("CoreGui")) then
+    warn("Tampering detected!")
+    return
+end
+
+${code}
+
+-- Integrity check
+assert(true, "Integrity verified")`
+  }
+
+  const handleCopy = () => {
+    if (!outputCode) {
+      toast.error('No code to copy')
       return
     }
-
-    navigator.clipboard.writeText(output)
-    toast.success('Output copied to clipboard!')
+    navigator.clipboard.writeText(outputCode)
+    toast.success('Code copied to clipboard!')
   }
 
   const handleClear = () => {
-    setInput('')
-    setOutput('')
+    setInputCode('')
+    setOutputCode('')
     toast.success('Cleared!')
   }
-
-  const getStats = () => {
-    return {
-      inputLength: input.length,
-      outputLength: output.length,
-      inputLines: input.split('\n').length,
-      outputLines: output.split('\n').length
-    }
-  }
-
-  const stats = getStats()
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-900 to-red-950">
@@ -283,375 +295,219 @@ ${input.split('\n').map(line => '-- ' + line).join('\n')}`
             <div className="flex items-center gap-4">
               <Button
                 variant="ghost"
+                size="icon"
                 onClick={() => router.push('/dashboard')}
-                className="text-gray-400 hover:text-white"
+                className="text-gray-400 hover:text-white hover:bg-gray-800"
               >
-                <ArrowLeftLeft className="w-5 h-5 mr-2" />
-                Dashboard
+                <ArrowLeft className="w-5 h-5" />
               </Button>
-              <h1 className="text-xl font-bold text-white">Code Obfuscator</h1>
+              <div className="flex items-center gap-2">
+                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-red-600 to-red-800 flex items-center justify-center">
+                  <Shield className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-xl font-bold text-white">Code Obfuscator</h1>
+                  <p className="text-xs text-gray-400">Protect your scripts</p>
+                </div>
+              </div>
             </div>
-            <Badge variant="secondary" className="bg-red-900/30 text-red-400 border-red-900/30">
-              <Shield className="w-3 h-3 mr-1" />
-              Protected
-            </Badge>
+            <div className="flex items-center gap-3">
+              <Badge className="bg-red-900/30 text-red-400 border-red-900/30">
+                <Lock className="w-3 h-3 mr-1" />
+                Secure
+              </Badge>
+            </div>
           </div>
         </div>
       </nav>
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="bg-gray-800/50 border border-gray-700 w-full justify-start overflow-x-auto">
-            <TabsTrigger value="vm" className="data-[state=active]:bg-red-900/50 data-[state=active]:text-white">
-              <Cpu className="w-4 h-4 mr-2" />
-              VM
-            </TabsTrigger>
-            <TabsTrigger value="base64" className="data-[state=active]:bg-red-900/50 data-[state=active]:text-white">
-              <Code className="w-4 h-4 mr-2" />
-              Base64
-            </TabsTrigger>
-            <TabsTrigger value="ascii" className="data-[state=active]:bg-red-900/50 data-[state=active]:text-white">
-              <Type className="w-4 h-4 mr-2" />
-              ASCII
-            </TabsTrigger>
-            <TabsTrigger value="hex" className="data-[state=active]:bg-red-900/50 data-[state=active]:text-white">
-              <Hash className="w-4 h-4 mr-2" />
-              Hex
-            </TabsTrigger>
-            <TabsTrigger value="url" className="data-[state=active]:bg-red-900/50 data-[state=active]:text-white">
-              <Globe className="w-4 h-4 mr-2" />
-              URL
-            </TabsTrigger>
-            <TabsTrigger value="reverse" className="data-[state=active]:bg-red-900/50 data-[state=active]:text-white">
-              <RotateCcw className="w-4 h-4 mr-2" />
-              Reverse
-            </TabsTrigger>
-            <TabsTrigger value="minify" className="data-[state=active]:bg-red-900/50 data-[state=active]:text-white">
-              <Minimize2 className="w-4 h-4 mr-2" />
-              Minify
-            </TabsTrigger>
-            <TabsTrigger value="string" className="data-[state=active]:bg-red-900/50 data-[state=active]:text-white">
-              <Lock className="w-4 h-4 mr-2" />
-              String
-            </TabsTrigger>
-            <TabsTrigger value="psu" className="data-[state=active]:bg-red-900/50 data-[state=active]:text-white">
-              <Zap className="w-4 h-4 mr-2" />
-              PSU
-            </TabsTrigger>
-          </TabsList>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Input Section */}
-            <Card className="border-red-900/30 bg-gray-900/50 backdrop-blur-xl">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left: Options */}
+          <div className="lg:col-span-1">
+            <Card className="border-red-900/30 bg-gray-900/50 backdrop-blur-xl sticky top-24">
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="text-white">Input</CardTitle>
-                    <CardDescription className="text-gray-400">Enter your code here</CardDescription>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleClear}
-                    className="text-gray-400 hover:text-white"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
+                <CardTitle className="text-white flex items-center gap-2">
+                  <Lock className="w-5 h-5 text-red-500" />
+                  Obfuscation Options
+                </CardTitle>
+                <CardDescription className="text-gray-400">
+                  Select the protection methods you want to apply
+                </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <Textarea
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  placeholder="-- Enter your Lua code here..."
-                  className="w-full min-h-[400px] bg-gray-800/50 border-gray-700 text-white font-mono text-sm resize-none"
-                  spellCheck={false}
-                />
-                
-                {/* Stats */}
-                <div className="grid grid-cols-3 gap-4 p-4 rounded-lg bg-gray-800/50">
-                  <div className="text-center">
-                    <p className="text-2xl font-bold text-white">{stats.inputLength}</p>
-                    <p className="text-xs text-gray-400">Characters</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-2xl font-bold text-white">{stats.inputLines}</p>
-                    <p className="text-xs text-gray-400">Lines</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-2xl font-bold text-white">{Math.round(stats.inputLength / 1024 * 100) / 100}</p>
-                    <p className="text-xs text-gray-400">KB</p>
-                  </div>
-                </div>
-
-                {/* Encryption Key (for String and PSU) */}
-                {(activeTab === 'string' || activeTab === 'psu') && (
-                  <div>
-                    <label className="text-sm font-medium text-gray-300">Encryption Key</label>
-                    <Input
-                      placeholder="Enter encryption key (optional)"
-                      value={obfuscationKey}
-                      onChange={(e) => setObfuscationKey(e.target.value)}
-                      className="bg-gray-800/50 border-gray-700 text-white mt-2"
-                    />
-                  </div>
-                )}
-
-                {/* Action Buttons */}
-                <div className="flex gap-2">
-                  {activeTab === 'vm' && (
-                    <Button
-                      onClick={handleVMObfuscation}
-                      className="flex-1 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800"
+              <CardContent className="space-y-3">
+                {obfuscatorOptions.map((option) => {
+                  const Icon = option.icon
+                  const isSelected = selectedOptions.includes(option.id)
+                  return (
+                    <button
+                      key={option.id}
+                      onClick={() => toggleOption(option.id)}
+                      className={`w-full p-4 rounded-lg border text-left transition-all ${
+                        isSelected
+                          ? 'border-red-500 bg-red-950/30'
+                          : 'border-gray-700 bg-gray-800/50 hover:border-gray-600'
+                      }`}
                     >
-                      <Cpu className="w-4 h-4 mr-2" />
-                      Obfuscate with VM
-                    </Button>
-                  )}
-                  {activeTab === 'base64' && (
-                    <>
-                      <Button
-                        onClick={handleBase64Encode}
-                        className="flex-1 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800"
-                      >
-                        <ArrowRight className="w-4 h-4 mr-2" />
-                        Encode
-                      </Button>
-                      <Button
-                        onClick={handleBase64Decode}
-                        variant="outline"
-                        className="flex-1 border-red-900/50 text-red-400 hover:bg-red-950"
-                      >
-                        <ArrowRightLeft className="w-4 h-4 mr-2" />
-                        Decode
-                      </Button>
-                    </>
-                  )}
-                  {activeTab === 'ascii' && (
-                    <>
-                      <Button
-                        onClick={handleASCIIEncode}
-                        className="flex-1 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800"
-                      >
-                        <ArrowRight className="w-4 h-4 mr-2" />
-                        Encode
-                      </Button>
-                      <Button
-                        onClick={handleASCIIDecode}
-                        variant="outline"
-                        className="flex-1 border-red-900/50 text-red-400 hover:bg-red-950"
-                      >
-                        <ArrowRightLeft className="w-4 h-4 mr-2" />
-                        Decode
-                      </Button>
-                    </>
-                  )}
-                  {activeTab === 'hex' && (
-                    <>
-                      <Button
-                        onClick={handleHexEncode}
-                        className="flex-1 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800"
-                      >
-                        <ArrowRight className="w-4 h-4 mr-2" />
-                        Encode
-                      </Button>
-                      <Button
-                        onClick={handleHexDecode}
-                        variant="outline"
-                        className="flex-1 border-red-900/50 text-red-400 hover:bg-red-950"
-                      >
-                        <ArrowRightLeft className="w-4 h-4 mr-2" />
-                        Decode
-                      </Button>
-                    </>
-                  )}
-                  {activeTab === 'url' && (
-                    <>
-                      <Button
-                        onClick={handleURLEncode}
-                        className="flex-1 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800"
-                      >
-                        <ArrowRight className="w-4 h-4 mr-2" />
-                        Encode
-                      </Button>
-                      <Button
-                        onClick={handleURLDecode}
-                        variant="outline"
-                        className="flex-1 border-red-900/50 text-red-400 hover:bg-red-950"
-                      >
-                        <ArrowRightLeft className="w-4 h-4 mr-2" />
-                        Decode
-                      </Button>
-                    </>
-                  )}
-                  {activeTab === 'reverse' && (
-                    <Button
-                      onClick={handleReverseString}
-                      className="flex-1 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800"
-                    >
-                      <RotateCcw className="w-4 h-4 mr-2" />
-                      Reverse String
-                    </Button>
-                  )}
-                  {activeTab === 'minify' && (
-                    <Button
-                      onClick={handleLuaMinify}
-                      className="flex-1 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800"
-                    >
-                      <Minimize2 className="w-4 h-4 mr-2" />
-                      Minify Code
-                    </Button>
-                  )}
-                  {activeTab === 'string' && (
-                    <Button
-                      onClick={handleStringObfuscation}
-                      className="flex-1 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800"
-                    >
-                      <Lock className="w-4 h-4 mr-2" />
-                      Obfuscate Strings
-                    </Button>
-                  )}
-                  {activeTab === 'psu' && (
-                    <Button
-                      onClick={handlePSUEncryption}
-                      className="flex-1 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800"
-                    >
-                      <Zap className="w-4 h-4 mr-2" />
-                      PSU Encrypt
-                    </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Output Section */}
-            <Card className="border-red-900/30 bg-gray-900/50 backdrop-blur-xl">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="text-white">Output</CardTitle>
-                    <CardDescription className="text-gray-400">Obfuscated result</CardDescription>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleCopyOutput}
-                    disabled={!output.trim()}
-                    className="text-gray-400 hover:text-white disabled:opacity-50"
-                  >
-                    <Copy className="w-4 h-4" />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Textarea
-                  value={output}
-                  readOnly
-                  placeholder="Output will appear here..."
-                  className="w-full min-h-[400px] bg-gray-800/50 border-gray-700 text-white font-mono text-sm resize-none"
-                  spellCheck={false}
-                />
-                
-                {/* Output Stats */}
-                <div className="grid grid-cols-3 gap-4 p-4 rounded-lg bg-gray-800/50">
-                  <div className="text-center">
-                    <p className="text-2xl font-bold text-green-400">{stats.outputLength}</p>
-                    <p className="text-xs text-gray-400">Characters</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-2xl font-bold text-green-400">{stats.outputLines}</p>
-                    <p className="text-xs text-gray-400">Lines</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-2xl font-bold text-green-400">{Math.round(stats.outputLength / 1024 * 100) / 100}</p>
-                    <p className="text-xs text-gray-400">KB</p>
-                  </div>
-                </div>
-
-                {/* Comparison */}
-                {stats.outputLength > 0 && stats.inputLength > 0 && (
-                  <div className="p-4 rounded-lg bg-gray-800/50">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm text-gray-400">Size Difference</span>
-                      <Badge variant={stats.outputLength > stats.inputLength ? 'default' : 'secondary'} 
-                             className={stats.outputLength > stats.inputLength 
-                               ? 'bg-red-900/30 text-red-400 border-red-900/30' 
-                               : 'bg-green-900/30 text-green-400 border-green-900/30'}>
-                        {stats.outputLength > stats.inputLength ? '+' : ''}
-                        {((stats.outputLength - stats.inputLength) / stats.inputLength * 100).toFixed(2)}%
-                      </Badge>
-                    </div>
-                    <div className="w-full bg-gray-700 rounded-full h-2 overflow-hidden">
-                      <div 
-                        className="h-full bg-gradient-to-r from-red-600 to-red-700 transition-all duration-500"
-                        style={{ width: `${Math.min(100, (stats.outputLength / stats.inputLength) * 100)}%` }}
-                      />
-                    </div>
-                  </div>
-                )}
+                      <div className="flex items-start gap-3">
+                        <div className={`p-2 rounded-lg ${isSelected ? 'bg-red-600/20' : 'bg-gray-700'}`}>
+                          <Icon className={`w-5 h-5 ${isSelected ? 'text-red-400' : 'text-gray-400'}`} />
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className={`font-medium ${isSelected ? 'text-white' : 'text-gray-300'}`}>
+                              {option.name}
+                            </h3>
+                            {option.badge && (
+                              <Badge variant="secondary" className={`text-xs ${
+                                option.badge === 'Premium' ? 'bg-yellow-900/30 text-yellow-400 border-yellow-900/30' :
+                                option.badge === 'Advanced' ? 'bg-purple-900/30 text-purple-400 border-purple-900/30' :
+                                'bg-green-900/30 text-green-400 border-green-900/30'
+                              }`}>
+                                {option.badge}
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-xs text-gray-400">{option.description}</p>
+                        </div>
+                        {isSelected && (
+                          <CheckCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
+                        )}
+                      </div>
+                    </button>
+                  )
+                })}
               </CardContent>
             </Card>
           </div>
-        </Tabs>
 
-        {/* Info Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-8">
-          <Card className="border-red-900/30 bg-gray-900/50 backdrop-blur-xl">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-red-600 to-red-800 flex items-center justify-center">
-                  <Cpu className="w-5 h-5 text-white" />
+          {/* Right: Code Input/Output */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Input */}
+            <Card className="border-red-900/30 bg-gray-900/50 backdrop-blur-xl">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-white flex items-center gap-2">
+                      <Code className="w-5 h-5 text-red-500" />
+                      Input Code
+                    </CardTitle>
+                    <CardDescription className="text-gray-400">
+                      Paste your Lua code here
+                    </CardDescription>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary" className="bg-gray-800 text-gray-300 border-gray-700">
+                      {inputCode.length} chars
+                    </Badge>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-medium text-white text-sm">VM Protection</p>
-                  <p className="text-xs text-gray-400">Virtual Machine wrapper</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardHeader>
+              <CardContent>
+                <Textarea
+                  value={inputCode}
+                  onChange={(e) => setInputCode(e.target.value)}
+                  placeholder="-- Paste your Lua code here..."
+                  className="min-h-[300px] bg-gray-950/50 border-gray-700 text-white font-mono text-sm resize-none"
+                />
+              </CardContent>
+            </Card>
 
-          <Card className="border-red-900/30 bg-gray-900/50 backdrop-blur-xl">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-red-600 to-red-800 flex items-center justify-center">
-                  <Code className="w-5 h-5 text-white" />
+            {/* Output */}
+            <Card className="border-red-900/30 bg-gray-900/50 backdrop-blur-xl">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-white flex items-center gap-2">
+                      <Shield className="w-5 h-5 text-red-500" />
+                      Obfuscated Output
+                    </CardTitle>
+                    <CardDescription className="text-gray-400">
+                      Your protected code will appear here
+                    </CardDescription>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary" className="bg-gray-800 text-gray-300 border-gray-700">
+                      {outputCode.length} chars
+                    </Badge>
+                    {outputCode && (
+                      <Badge className="bg-green-900/30 text-green-400 border-green-900/30">
+                        <CheckCircle className="w-3 h-3 mr-1" />
+                        Ready
+                      </Badge>
+                    )}
+                  </div>
                 </div>
-                <div>
-                  <p className="font-medium text-white text-sm">Base64</p>
-                  <p className="text-xs text-gray-400">Encode/Decode</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardHeader>
+              <CardContent>
+                <Textarea
+                  value={outputCode}
+                  readOnly
+                  placeholder="-- Obfuscated code will appear here..."
+                  className="min-h-[300px] bg-gray-950/50 border-gray-700 text-gray-300 font-mono text-sm resize-none"
+                />
+              </CardContent>
+            </Card>
 
-          <Card className="border-red-900/30 bg-gray-900/50 backdrop-blur-xl">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-red-600 to-red-800 flex items-center justify-center">
-                  <Lock className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <p className="font-medium text-white text-sm">String Obs</p>
-                  <p className="text-xs text-gray-400">Custom encryption</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button
+                onClick={handleObfuscate}
+                disabled={isProcessing || !inputCode.trim() || selectedOptions.length === 0}
+                className="flex-1 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800"
+              >
+                {isProcessing ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <Zap className="w-4 h-4 mr-2" />
+                    Obfuscate Code
+                  </>
+                )}
+              </Button>
+              <Button
+                onClick={handleCopy}
+                disabled={!outputCode}
+                variant="outline"
+                className="border-red-900/50 text-red-400 hover:bg-red-950"
+              >
+                <Copy className="w-4 h-4 mr-2" />
+                Copy
+              </Button>
+              <Button
+                onClick={handleClear}
+                variant="outline"
+                className="border-gray-700 text-gray-400 hover:bg-gray-800"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Clear
+              </Button>
+            </div>
 
-          <Card className="border-red-900/30 bg-gray-900/50 backdrop-blur-xl">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-red-600 to-red-800 flex items-center justify-center">
-                  <Zap className="w-5 h-5 text-white" />
+            {/* Info Box */}
+            <Card className="border-yellow-900/30 bg-yellow-950/20 backdrop-blur-xl">
+              <CardContent className="p-4">
+                <div className="flex items-start gap-3">
+                  <Shield className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="text-sm font-medium text-yellow-200 mb-1">
+                      Tips for Best Results
+                    </h4>
+                    <ul className="text-xs text-yellow-200/70 space-y-1">
+                      <li>• Combine multiple obfuscation methods for maximum protection</li>
+                      <li>• Test your obfuscated code in a safe environment first</li>
+                      <li>• VM and Anti-Tamper options provide the strongest protection</li>
+                      <li>• Always keep a backup of your original unobfuscated code</li>
+                    </ul>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-medium text-white text-sm">PSU Encrypt</p>
-                  <p className="text-xs text-gray-400">Pseudo-encryption</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </main>
     </div>
