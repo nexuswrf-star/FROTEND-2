@@ -76,10 +76,17 @@ export async function createUser(data: {
   })
 }
 
-export async function authenticateUser(username: string, password: string) {
-  const user = await db.user.findUnique({
-    where: { username },
+export async function authenticateUser(emailOrUsername: string, password: string) {
+  // Try to find user by email or username
+  let user = await db.user.findUnique({
+    where: { email: emailOrUsername },
   })
+
+  if (!user) {
+    user = await db.user.findUnique({
+      where: { username: emailOrUsername },
+    })
+  }
 
   if (!user) {
     return null
