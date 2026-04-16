@@ -181,7 +181,7 @@ export default function AdminPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-900 to-red-950 flex items-center justify-center">
+      <div className="page-background min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
           <p className="text-gray-400">Loading admin panel...</p>
@@ -191,7 +191,7 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-900 to-red-950">
+    <div className="page-background min-h-screen">
       {/* Navbar */}
       <nav className="border-b border-red-900/30 bg-gray-900/50 backdrop-blur-xl">
         <div className="container mx-auto px-4 py-4">

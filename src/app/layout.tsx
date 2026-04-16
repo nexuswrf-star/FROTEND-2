@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   keywords: ["Z.ai", "Next.js", "TypeScript", "Tailwind CSS", "shadcn/ui", "AI development", "React"],
   authors: [{ name: "Z.ai Team" }],
   icons: {
-    icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
+    icon: "/demon-logo.jpg",
   },
   openGraph: {
     title: "Z.ai Code Scaffold",
@@ -27,11 +27,13 @@ export const metadata: Metadata = {
     url: "https://chat.z.ai",
     siteName: "Z.ai",
     type: "website",
+    images: ["/demon-logo.jpg"],
   },
   twitter: {
     card: "summary_large_image",
     title: "Z.ai Code Scaffold",
     description: "AI-powered development with modern React stack",
+    images: ["/demon-logo.jpg"],
   },
 };
 

@@ -259,7 +259,7 @@ export default function GamesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-900 to-red-950">
+    <div className="page-background min-h-screen">
       {/* Navbar */}
       <nav className="border-b border-red-900/30 bg-gray-900/50 backdrop-blur-xl">
         <div className="container mx-auto px-4 py-4">

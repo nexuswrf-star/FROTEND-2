@@ -133,15 +133,13 @@ export default function Home() {
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-red-950">
+    <div className="page-background min-h-screen">
       {/* Navbar */}
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-gray-950/90 backdrop-blur-xl border-b border-gray-800' : 'bg-transparent'}`}>
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-red-600 to-red-800 flex items-center justify-center">
-                <Shield className="w-6 h-6 text-white" />
-              </div>
+              <img src="/demon-logo.jpg" alt="Beulrock SS Logo" className="w-10 h-10 rounded-lg object-cover" />
               <span className="text-xl font-bold text-white">Beulrock SS</span>
             </div>
             <div className="hidden md:flex items-center gap-6">

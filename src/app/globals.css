@@ -78,6 +78,29 @@
   --sidebar-ring: oklch(0.708 0 0);
 }
 
+.page-background {
+  position: relative;
+  overflow: hidden;
+  background-image: linear-gradient(rgba(15, 23, 42, 0.12), rgba(15, 23, 42, 0.12)), url('/demon-logo.jpg');
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+.page-background::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(255, 255, 255, 0.08), transparent 40%);
+  pointer-events: none;
+}
+
+.page-background > * {
+  position: relative;
+  z-index: 1;
+}
+
 .dark {
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
