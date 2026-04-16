@@ -123,7 +123,7 @@ export default function AdminPage() {
     }
 
     const user = JSON.parse(userData)
-    if (user.role !== 'admin') {
+    if (user.role?.toLowerCase() !== 'admin') {
       toast.error('Access denied. Admin only.')
       router.push('/dashboard')
       return
@@ -362,7 +362,7 @@ export default function AdminPage() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge variant={user.role === 'admin' ? 'default' : 'secondary'} className={user.role === 'admin' ? 'bg-purple-900/30 text-purple-400 border-purple-900/30' : 'bg-gray-800 text-gray-400 border-gray-700'}>
+                          <Badge variant={user.role?.toLowerCase() === 'admin' ? 'default' : 'secondary'} className={user.role?.toLowerCase() === 'admin' ? 'bg-purple-900/30 text-purple-400 border-purple-900/30' : 'bg-gray-800 text-gray-400 border-gray-700'}>
                             {user.role}
                           </Badge>
                         </TableCell>
@@ -382,7 +382,7 @@ export default function AdminPage() {
                             <Button variant="ghost" size="icon" className="text-gray-400 hover:text-white">
                               <Edit2 className="w-4 h-4" />
                             </Button>
-                            {user.role !== 'admin' && (
+                            {user.role?.toLowerCase() !== 'admin' && (
                               <Button
                                 variant="ghost"
                                 size="icon"
