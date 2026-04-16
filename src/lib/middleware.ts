@@ -38,7 +38,7 @@ export function requireAdmin(handler: (req: NextRequest, user: any) => Promise<R
       })
     }
 
-    if (user.role !== 'admin') {
+    if (user.role?.toLowerCase() !== 'admin') {
       return new Response(JSON.stringify({ error: 'Forbidden' }), {
         status: 403,
         headers: { 'Content-Type': 'application/json' },

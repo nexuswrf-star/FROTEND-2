@@ -71,24 +71,46 @@ export default function WhitelistPage() {
     }
   }
 
-  const handleRedeemKey = () => {
+  const handleRedeemKey = async () => {
     if (!redeemKey.trim()) {
       toast.error('Please enter a key')
       return
     }
 
-    if (redeemKey === 'ULTIMATE-2024') {
-      setUserTier('ultimate')
-      setExpiryDays(90)
+    const token = localStorage.getItem('token')
+    if (!token) {
+      toast.error('Please login to continue')
+      router.push('/login')
+      return
+    }
+
+    setIsRefreshing(true)
+
+    try {
+      const response = await fetch('/api/redeem', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ code: redeemKey.trim() }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to redeem key')
+      }
+
+      toast.success(data.message || 'Key redeemed successfully!')
       setRedeemKey('')
-      toast.success('Upgraded to Ultimate tier!')
-    } else if (redeemKey === 'PREMIUM-2024') {
-      setUserTier('premium')
-      setExpiryDays(45)
-      setRedeemKey('')
-      toast.success('Upgraded to Premium tier!')
-    } else {
-      toast.error('Invalid license key')
+
+      // Refresh whitelist data
+      await loadWhitelistData()
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to redeem key')
+    } finally {
+      setIsRefreshing(false)
     }
   }
 
@@ -323,10 +345,20 @@ export default function WhitelistPage() {
                 </div>
                 <Button
                   onClick={handleRedeemKey}
+                  disabled={isRefreshing}
                   className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800"
                 >
-                  <Zap className="w-4 h-4 mr-2" />
-                  Redeem Key
+                  {isRefreshing ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Redeeming...
+                    </>
+                  ) : (
+                    <>
+                      <Zap className="w-4 h-4 mr-2" />
+                      Redeem Key
+                    </>
+                  )}
                 </Button>
               </CardContent>
             </Card>
