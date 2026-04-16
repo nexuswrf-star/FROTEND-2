@@ -7,7 +7,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Separator } from '@/components/ui/separator'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { 
@@ -29,31 +28,41 @@ import { toast } from 'sonner'
 interface User {
   username: string
   tier: string
-  id: number
+  id: string
+  role: string
+}
+
+interface DashboardData {
+  user: User
+  whitelist: {
+    tier: string
+    active: boolean
+    expiresAt: Date | null
+  } | null
+  stats: {
+    executions: number
+    daysActive: number
+    whitelistTier: string
+    referrals: number
+    balance: string
+  }
+  recentActivity: {
+    id: string
+    action: string
+    game: string
+    time: string
+    status: string
+  }[]
 }
 
 export default function DashboardPage() {
   const router = useRouter()
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null)
   const [redeemKey, setRedeemKey] = useState('')
-
-  // Mock dashboard stats
-  const [stats, setStats] = useState({
-    executions: 0,
-    daysActive: 0,
-    whitelistTier: 'Basic',
-    referrals: 0,
-    balance: 0
-  })
-
-  const [recentActivity, setRecentActivity] = useState([
-    { id: 1, action: 'Script Executed', game: 'Blox Fruits', time: '2 min ago', status: 'success' },
-    { id: 2, action: 'Joined Server', game: 'Pet Simulator 99', time: '15 min ago', status: 'success' },
-    { id: 3, action: 'Injection Failed', game: 'Tower of Hell', time: '1 hour ago', status: 'error' },
-    { id: 4, action: 'Script Executed', game: 'Da Hood', time: '2 hours ago', status: 'success' },
-    { id: 5, action: 'Key Redeemed', game: 'N/A', time: '3 hours ago', status: 'success' },
-  ])
+  const [isRedeeming, setIsRedeeming] = useState(false)
 
   const [quickPicks, setQuickPicks] = useState([
     { id: 1, title: 'Dark Dex', description: 'Advanced decompiler', verified: true },
@@ -62,7 +71,10 @@ export default function DashboardPage() {
   ])
 
   useEffect(() => {
-    // Check authentication
+    loadDashboardData()
+  }, [])
+
+  const loadDashboardData = async () => {
     const token = localStorage.getItem('token')
     const userData = localStorage.getItem('user')
     
@@ -73,26 +85,30 @@ export default function DashboardPage() {
 
     try {
       setUser(JSON.parse(userData))
-      loadDashboardData()
+      setIsLoading(true)
+
+      const response = await fetch('/api/dashboard/stats', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      })
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          handleLogout()
+          return
+        }
+        throw new Error('Failed to load dashboard')
+      }
+
+      const data = await response.json()
+      setDashboardData(data.data)
     } catch (error) {
-      console.error('Error parsing user data:', error)
-      router.push('/login')
+      console.error('Error loading dashboard:', error)
+      toast.error('Failed to load dashboard data')
     } finally {
       setIsLoading(false)
     }
-  }, [router])
-
-  const loadDashboardData = async () => {
-    // Simulate loading dashboard data
-    setTimeout(() => {
-      setStats({
-        executions: Math.floor(Math.random() * 1000) + 500,
-        daysActive: Math.floor(Math.random() * 30) + 1,
-        whitelistTier: 'Premium',
-        referrals: Math.floor(Math.random() * 20) + 5,
-        balance: (Math.random() * 50 + 10).toFixed(2)
-      })
-    }, 1000)
   }
 
   const handleCopyReferralLink = () => {
@@ -107,13 +123,40 @@ export default function DashboardPage() {
       return
     }
 
-    // Simulate key redemption
-    if (redeemKey === 'ULTIMATE-2024' || redeemKey === 'PREMIUM-2024') {
-      toast.success('Key redeemed successfully!')
+    const token = localStorage.getItem('token')
+    if (!token) {
+      toast.error('Please login to continue')
+      router.push('/login')
+      return
+    }
+
+    setIsRedeeming(true)
+
+    try {
+      const response = await fetch('/api/redeem', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ code: redeemKey.trim() }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to redeem key')
+      }
+
+      toast.success(data.message || 'Key redeemed successfully!')
       setRedeemKey('')
-      loadDashboardData()
-    } else {
-      toast.error('Invalid license key')
+      
+      // Refresh dashboard data
+      await loadDashboardData()
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to redeem key')
+    } finally {
+      setIsRedeeming(false)
     }
   }
 
@@ -135,6 +178,16 @@ export default function DashboardPage() {
     )
   }
 
+  const stats = dashboardData?.stats || {
+    executions: 0,
+    daysActive: 0,
+    whitelistTier: 'Basic',
+    referrals: 0,
+    balance: '0.00'
+  }
+
+  const recentActivity = dashboardData?.recentActivity || []
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-900 to-red-950">
       {/* Navbar */}
@@ -148,7 +201,14 @@ export default function DashboardPage() {
               <h1 className="text-xl font-bold text-white">Beulrock SS</h1>
             </div>
             <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-400">Welcome, {user?.username}</span>
+              <div className="text-right">
+                <span className="text-sm text-white font-medium">{user?.username}</span>
+                {user?.tier && (
+                  <Badge className="ml-2 bg-red-900/30 text-red-400 border-red-900/30 text-xs">
+                    {user.tier}
+                  </Badge>
+                )}
+              </div>
               <Button variant="outline" onClick={handleLogout} className="border-red-900/50 text-red-400 hover:bg-red-950">
                 <LogOut className="w-4 h-4 mr-2" />
                 Logout
@@ -182,7 +242,7 @@ export default function DashboardPage() {
               <div className="text-2xl font-bold text-white">{stats.executions}</div>
               <p className="text-xs text-green-500 mt-1 flex items-center">
                 <TrendingUp className="w-3 h-3 mr-1" />
-                +12% this week
+                All time
               </p>
             </CardContent>
           </Card>
@@ -254,21 +314,27 @@ export default function DashboardPage() {
               <CardContent>
                 <ScrollArea className="h-[300px]">
                   <div className="space-y-4">
-                    {recentActivity.map((activity) => (
-                      <div key={activity.id} className="flex items-start gap-4 p-3 rounded-lg bg-gray-800/50">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${activity.status === 'success' ? 'bg-green-900/30' : 'bg-red-900/30'}`}>
-                          {activity.status === 'success' ? (
-                            <CheckCircle className="w-4 h-4 text-green-400" />
-                          ) : (
-                            <XCircle className="w-4 h-4 text-red-400" />
-                          )}
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-white">{activity.action}</p>
-                          <p className="text-xs text-gray-400">{activity.game} • {activity.time}</p>
-                        </div>
+                    {recentActivity.length === 0 ? (
+                      <div className="text-center py-8">
+                        <p className="text-gray-400 text-sm">No recent activity</p>
                       </div>
-                    ))}
+                    ) : (
+                      recentActivity.map((activity) => (
+                        <div key={activity.id} className="flex items-start gap-4 p-3 rounded-lg bg-gray-800/50">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${activity.status === 'success' ? 'bg-green-900/30' : 'bg-red-900/30'}`}>
+                            {activity.status === 'success' ? (
+                              <CheckCircle className="w-4 h-4 text-green-400" />
+                            ) : (
+                              <XCircle className="w-4 h-4 text-red-400" />
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-white">{activity.action}</p>
+                            <p className="text-xs text-gray-400">{activity.game} • {activity.time}</p>
+                          </div>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </ScrollArea>
               </CardContent>
@@ -375,10 +441,20 @@ export default function DashboardPage() {
                 </div>
                 <Button
                   onClick={handleRedeemKey}
+                  disabled={isRedeeming}
                   className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800"
                 >
-                  <Zap className="w-4 h-4 mr-2" />
-                  Redeem Key
+                  {isRedeeming ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Redeeming...
+                    </>
+                  ) : (
+                    <>
+                      <Zap className="w-4 h-4 mr-2" />
+                      Redeem Key
+                    </>
+                  )}
                 </Button>
               </CardContent>
             </Card>
@@ -413,14 +489,16 @@ export default function DashboardPage() {
                   <Activity className="w-4 h-4 mr-2" />
                   Open Executor
                 </Button>
-                <Button
-                  variant="ghost"
-                  onClick={() => router.push('/admin')}
-                  className="w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800"
-                >
-                  <Shield className="w-4 h-4 mr-2" />
-                  Admin Panel
-                </Button>
+                {user?.role === 'admin' && (
+                  <Button
+                    variant="ghost"
+                    onClick={() => router.push('/admin')}
+                    className="w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800"
+                  >
+                    <Shield className="w-4 h-4 mr-2" />
+                    Admin Panel
+                  </Button>
+                )}
                 <Button
                   variant="ghost"
                   onClick={() => router.push('/obfuscator')}

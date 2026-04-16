@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-
-// Mock user database (in production, this would be in a real database)
-const MOCK_USERS = [
-  { id: 1, username: 'admin', email: 'admin@beulrock.com', password: 'admin', role: 'admin', tier: 'ultimate' },
-  { id: 2, username: 'beulrock', email: 'user@beulrock.com', password: 'password', role: 'user', tier: 'premium' },
-  { id: 3, username: 'demo', email: 'demo@test.com', password: 'demo', role: 'user', tier: 'basic' },
-]
+import { authenticateUser } from '@/lib/auth'
+import { db } from '@/lib/db'
 
 export async function POST(request: NextRequest) {
   try {
@@ -20,36 +15,29 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Find user (match by email or username)
-    const user = MOCK_USERS.find(
-      u => u.email === email || u.username === email
-    )
+    // Try to authenticate user (accepts email or username)
+    const result = await authenticateUser(email, password)
 
-    if (!user) {
+    if (!result) {
       return NextResponse.json(
         { error: 'Invalid email or password' },
         { status: 401 }
       )
     }
 
-    // Check password (in production, use bcrypt or similar)
-    if (user.password !== password) {
-      return NextResponse.json(
-        { error: 'Invalid email or password' },
-        { status: 401 }
-      )
-    }
-
-    // Generate mock token (in production, use JWT)
-    const token = `mock_token_${user.username}_${Date.now()}`
-
-    // Return success response (excluding password)
-    const { password: _, ...userWithoutPassword } = user
+    // Log activity
+    await db.activityLog.create({
+      data: {
+        userId: result.user.id,
+        action: 'login',
+        status: 'success',
+      },
+    })
 
     return NextResponse.json({
       success: true,
-      token,
-      user: userWithoutPassword
+      token: result.token,
+      user: result.user,
     })
 
   } catch (error) {

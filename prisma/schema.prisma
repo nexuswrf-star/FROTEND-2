@@ -1,9 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,20 +10,95 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// User model with authentication and subscription
 model User {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  email        String   @unique
+  password     String
+  role         String   @default("user") // admin, user
+  tier         String   @default("Basic") // Basic, Premium, Ultimate
+  referrerId   String?
+  referrer     User?    @relation("Referrals", fields: [referrerId], references: [id], onDelete: SetNull)
+  referrals    User[]   @relation("Referrals")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  scripts      Script[]
+  keys         Key[]
+  activityLogs ActivityLog[]
+  whitelist    Whitelist?
+}
+
+// Games that are supported
+model Game {
+  id           String   @id @default(cuid())
+  name         String
+  placeId      String   @unique
+  thumbnailUrl String?
+  status       String   @default("active") // active, inactive, backdoor
+  players      Int      @default(0)
+  description  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  scripts      Script[]
+  activityLogs ActivityLog[]
+}
+
+// Script library
+model Script {
+  id          String   @id @default(cuid())
+  name        String
+  code        String
+  description String?
+  category    String   // auto_farm, utility, admin, etc.
+  verified    Boolean  @default(false)
+  gameId      String?
+  game        Game?    @relation(fields: [gameId], references: [id], onDelete: SetNull)
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  views       Int      @default(0)
+  downloads   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// License keys
+model Key {
   id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
+  code      String   @unique
+  tier      String   // Basic, Premium, Ultimate
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  redeemed  Boolean  @default(false)
+  redeemedAt DateTime?
+  createdAt DateTime @default(now())
+  expiresAt DateTime?
+}
+
+// Whitelist status
+model Whitelist {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tier      String   // Basic, Premium, Ultimate
+  active    Boolean  @default(true)
+  expiresAt DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
-model Post {
+// Activity logs
+model ActivityLog {
   id        String   @id @default(cuid())
-  title     String
-  content   String?
-  published Boolean  @default(false)
-  authorId  String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action    String   // script_executed, injection_failed, key_redeemed, etc.
+  gameName  String?
+  gameId    String?
+  game      Game?    @relation(fields: [gameId], references: [id], onDelete: SetNull)
+  status    String   // success, error
+  details   String?
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 }

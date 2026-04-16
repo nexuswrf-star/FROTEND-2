@@ -5,8 +5,6 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Label } from '@/components/ui/label'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
 import { 
   Shield, 
@@ -30,6 +28,17 @@ interface ObfuscatorOption {
   icon: any
   description: string
   badge?: string
+}
+
+interface ObfuscationResult {
+  obfuscatedCode: string
+  statistics: {
+    originalSize: number
+    obfuscatedSize: number
+    sizeChange: string
+    processingTime: string
+    optionsUsed: string[]
+  }
 }
 
 const obfuscatorOptions: ObfuscatorOption[] = [
@@ -94,6 +103,7 @@ export default function ObfuscatorPage() {
   const [outputCode, setOutputCode] = useState('')
   const [selectedOptions, setSelectedOptions] = useState<string[]>(['encode'])
   const [isProcessing, setIsProcessing] = useState(false)
+  const [statistics, setStatistics] = useState<ObfuscationResult['statistics'] | null>(null)
 
   const toggleOption = (optionId: string) => {
     setSelectedOptions(prev =>
@@ -114,161 +124,58 @@ export default function ObfuscatorPage() {
       return
     }
 
+    // Check authentication
+    const token = localStorage.getItem('token')
+    if (!token) {
+      toast.error('Please login to use the obfuscator')
+      router.push('/login')
+      return
+    }
+
     setIsProcessing(true)
-    
-    // Simulate processing time
-    setTimeout(() => {
-      try {
-        let result = inputCode
 
-        // Apply selected obfuscation methods
-        if (selectedOptions.includes('minify')) {
-          result = minifyCode(result)
-        }
-
-        if (selectedOptions.includes('encode')) {
-          result = encodeBase64(result)
-        }
-
-        if (selectedOptions.includes('ascii')) {
-          result = asciiEncode(result)
-        }
-
-        if (selectedOptions.includes('vm')) {
-          result = vmObfuscate(result)
-        }
-
-        if (selectedOptions.includes('psu')) {
-          result = psuObfuscate(result)
-        }
-
-        if (selectedOptions.includes('shuffle')) {
-          result = shuffleVariables(result)
-        }
-
-        if (selectedOptions.includes('controlflow')) {
-          result = controlFlowObfuscate(result)
-        }
-
-        if (selectedOptions.includes('antitamp')) {
-          result = addAntiTamper(result)
-        }
-
-        setOutputCode(result)
-        toast.success('Code obfuscated successfully!')
-      } catch (error) {
-        toast.error('Error obfuscating code')
-        console.error(error)
-      } finally {
-        setIsProcessing(false)
+    try {
+      const options = {
+        minify: selectedOptions.includes('minify'),
+        encode: selectedOptions.includes('encode'),
+        ascii: selectedOptions.includes('ascii'),
+        vm: selectedOptions.includes('vm'),
+        psu: selectedOptions.includes('psu'),
+        shuffle: selectedOptions.includes('shuffle'),
+        controlflow: selectedOptions.includes('controlflow'),
+        antitamp: selectedOptions.includes('antitamp'),
       }
-    }, 1500)
-  }
 
-  const minifyCode = (code: string) => {
-    return code
-      .replace(/\s+/g, ' ')
-      .replace(/\/\*[\s\S]*?\*\//g, '')
-      .replace(/\/\/.*/g, '')
-      .trim()
-  }
+      const response = await fetch('/api/obfuscate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ code: inputCode, options }),
+      })
 
-  const encodeBase64 = (code: string) => {
-    const encoded = Buffer.from(code).toString('base64')
-    return `-- Base64 Encoded\nloadstring(game:HttpGet("data:text/plain;base64,${encoded}"))()`
-  }
+      const data = await response.json()
 
-  const asciiEncode = (code: string) => {
-    return code.split('').map(char => {
-      const code = char.charCodeAt(0)
-      return code > 127 || code < 32 ? `\\${code}` : char
-    }).join('')
-  }
+      if (!response.ok) {
+        if (response.status === 401) {
+          toast.error('Please login to continue')
+          router.push('/login')
+          return
+        }
+        throw new Error(data.error || 'Obfuscation failed')
+      }
 
-  const vmObfuscate = (code: string) => {
-    return `-- VM Obfuscated
-local VM = {}
-VM.__index = VM
+      setOutputCode(data.data.obfuscatedCode)
+      setStatistics(data.data.statistics)
+      toast.success('Code obfuscated successfully!')
 
-function VM.new()
-    return setmetatable({}, VM)
-end
-
-function VM:run(code)
-    return load(code)()
-end
-
-local vm = VM.new()
-vm:run([==[${code}]==])`
-  }
-
-  const psuObfuscate = (code: string) => {
-    const randomString = Math.random().toString(36).substring(7)
-    return `-- PSU Protected
-local PSU = {}
-PSU.Key = "${randomString}"
-
-function PSU.Encrypt(str)
-    local result = ""
-    for i = 1, #str do
-        result = result .. string.char(string.byte(str, i) ~ string.byte(PSU.Key, (i - 1) % #PSU.Key + 1))
-    end
-    return result
-end
-
-local code = [=[${code}]=]
-local encrypted = PSU.Encrypt(code)
-load(encrypted)()`
-  }
-
-  const shuffleVariables = (code: string) => {
-    const vars = code.match(/\b[a-zA-Z_$][a-zA-Z0-9_$]*\b/g) || []
-    const uniqueVars = [...new Set(vars)]
-    const shuffled: Record<string, string> = {}
-
-    uniqueVars.forEach(v => {
-      shuffled[v] = `var_${Math.random().toString(36).substring(2, 8)}`
-    })
-
-    let result = code
-    Object.entries(shuffled).forEach(([old, newVar]) => {
-      const regex = new RegExp(`\\b${old}\\b`, 'g')
-      result = result.replace(regex, newVar)
-    })
-
-    return `-- Variable Shuffled\n${result}`
-  }
-
-  const controlFlowObfuscate = (code: string) => {
-    const junk = `
--- Junk code
-if math.random(1, 100) > 50 then
-    local a = 1
-    local b = 2
-    local c = a + b
-end
-`
-    return `-- Control Flow Obfuscated\n${junk}${code}${junk}`
-  }
-
-  const addAntiTamper = (code: string) => {
-    return `-- Anti-Tamper Protected
-local debugg = debug
-if debugg and debugg.info then
-    warn("Debugger detected!")
-    return
-end
-
--- Check for script tampering
-if script:IsDescendantOf(game:GetService("CoreGui")) then
-    warn("Tampering detected!")
-    return
-end
-
-${code}
-
--- Integrity check
-assert(true, "Integrity verified")`
+    } catch (error: any) {
+      toast.error(error.message || 'Error obfuscating code')
+      console.error(error)
+    } finally {
+      setIsProcessing(false)
+    }
   }
 
   const handleCopy = () => {
@@ -283,6 +190,7 @@ assert(true, "Integrity verified")`
   const handleClear = () => {
     setInputCode('')
     setOutputCode('')
+    setStatistics(null)
     toast.success('Cleared!')
   }
 
@@ -447,6 +355,28 @@ assert(true, "Integrity verified")`
                   placeholder="-- Obfuscated code will appear here..."
                   className="min-h-[300px] bg-gray-950/50 border-gray-700 text-gray-300 font-mono text-sm resize-none"
                 />
+                {statistics && (
+                  <div className="mt-4 p-4 rounded-lg bg-gray-800/50 space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-400">Original Size:</span>
+                      <span className="text-white">{statistics.originalSize} bytes</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-400">Obfuscated Size:</span>
+                      <span className="text-white">{statistics.obfuscatedSize} bytes</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-400">Size Change:</span>
+                      <span className={statistics.sizeChange.startsWith('-') ? 'text-green-400' : 'text-red-400'}>
+                        {statistics.sizeChange}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-400">Processing Time:</span>
+                      <span className="text-white">{statistics.processingTime}</span>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -500,7 +430,7 @@ assert(true, "Integrity verified")`
                     <ul className="text-xs text-yellow-200/70 space-y-1">
                       <li>• Combine multiple obfuscation methods for maximum protection</li>
                       <li>• Test your obfuscated code in a safe environment first</li>
-                      <li>• VM and Anti-Tamper options provide the strongest protection</li>
+                      <li>• VM and Anti-Tamper options require Premium or Ultimate tier</li>
                       <li>• Always keep a backup of your original unobfuscated code</li>
                     </ul>
                   </div>
