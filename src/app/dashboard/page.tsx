@@ -21,7 +21,8 @@ import {
   Zap,
   TrendingUp,
   CheckCircle,
-  XCircle
+  XCircle,
+  Lock
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -419,6 +420,14 @@ export default function DashboardPage() {
                 >
                   <Shield className="w-4 h-4 mr-2" />
                   Admin Panel
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => router.push('/obfuscator')}
+                  className="w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800"
+                >
+                  <Lock className="w-4 h-4 mr-2" />
+                  Code Obfuscator
                 </Button>
               </CardContent>
             </Card>
