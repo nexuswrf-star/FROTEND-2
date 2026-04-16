@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { requireAuth, verifyPassword, hashPassword } from '@/lib/auth'
+import { requireAuth } from '@/lib/middleware'
+import { verifyPassword, hashPassword } from '@/lib/auth'
 
 export const POST = requireAuth(async (request: NextRequest, user: any) => {
   try {
