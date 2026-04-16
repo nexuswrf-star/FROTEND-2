@@ -45,9 +45,17 @@ export const POST = requireAuth(async (request: NextRequest, user: any) => {
     }
 
     // Update user tier
-    await db.user.update({
+    const updatedUser = await db.user.update({
       where: { id: user.userId },
       data: { tier: key.tier },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        role: true,
+        tier: true,
+        robloxUsername: true,
+      },
     })
 
     // Update whitelist
@@ -58,11 +66,13 @@ export const POST = requireAuth(async (request: NextRequest, user: any) => {
         tier: key.tier,
         active: true,
         expiresAt: key.expiresAt,
+        robloxUsername: updatedUser.robloxUsername,
       },
       update: {
         tier: key.tier,
         active: true,
         expiresAt: key.expiresAt,
+        robloxUsername: updatedUser.robloxUsername,
       },
     })
 

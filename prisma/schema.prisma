@@ -12,22 +12,24 @@ datasource db {
 
 // User model with authentication and subscription
 model User {
-  id           String   @id @default(cuid())
-  username     String   @unique
-  email        String   @unique
-  password     String
-  role         String   @default("user") // admin, user
-  tier         String   @default("Basic") // Basic, Premium, Ultimate
-  referrerId   String?
-  referrer     User?    @relation("Referrals", fields: [referrerId], references: [id], onDelete: SetNull)
-  referrals    User[]   @relation("Referrals")
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id              String   @id @default(cuid())
+  username        String   @unique
+  email           String   @unique
+  password        String
+  role            String   @default("user") // admin, user
+  tier            String   @default("Basic") // Basic, Premium, Ultimate
+  robloxUsername  String?
+  profilePicture  String?  @default("")
+  referrerId      String?
+  referrer        User?    @relation("Referrals", fields: [referrerId], references: [id], onDelete: SetNull)
+  referrals       User[]   @relation("Referrals")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
-  scripts      Script[]
-  keys         Key[]
-  activityLogs ActivityLog[]
-  whitelist    Whitelist?
+  scripts         Script[]
+  keys            Key[]
+  activityLogs    ActivityLog[]
+  whitelist       Whitelist?
 }
 
 // Games that are supported
@@ -79,14 +81,15 @@ model Key {
 
 // Whitelist status
 model Whitelist {
-  id        String   @id @default(cuid())
-  userId    String   @unique
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  tier      String   // Basic, Premium, Ultimate
-  active    Boolean  @default(true)
-  expiresAt DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tier           String   // Basic, Premium, Ultimate
+  active         Boolean  @default(true)
+  robloxUsername  String?
+  expiresAt      DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 }
 
 // Activity logs
