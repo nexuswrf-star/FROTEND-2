@@ -51,10 +51,6 @@ export default function ScriptsPage() {
     category: 'General'
   })
 
-  useEffect(() => {
-    loadScripts()
-  }, [])
-
   const loadScripts = () => {
     // Mock scripts data
     const mockScripts: Script[] = [
@@ -113,6 +109,10 @@ export default function ScriptsPage() {
     setScripts(mockScripts)
     setIsLoading(false)
   }
+
+  useEffect(() => {
+    loadScripts()
+  }, [])
 
   const handleOpenDialog = (script?: Script) => {
     if (script) {

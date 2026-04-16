@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -13,6 +14,7 @@ import {
   Users, 
   Key, 
   Activity, 
+  Settings, 
   Search, 
   Plus, 
   Trash2, 
@@ -21,6 +23,7 @@ import {
   Shield,
   Zap,
   CheckCircle,
+  XCircle,
   Download,
   BarChart3
 } from 'lucide-react'
@@ -131,6 +134,45 @@ export default function AdminPage() {
 
     loadAdminData()
   }, [router])
+
+  const loadAdminData = () => {
+    // Mock users data
+    const mockUsers: User[] = [
+      { id: 1, username: 'admin', email: 'admin@beulrock.com', role: 'admin', tier: 'ultimate', status: 'active', createdAt: '2024-01-01', lastActive: '2 min ago' },
+      { id: 2, username: 'beulrock', email: 'user@beulrock.com', role: 'user', tier: 'premium', status: 'active', createdAt: '2024-01-15', lastActive: '5 min ago' },
+      { id: 3, username: 'demo_user', email: 'demo@test.com', role: 'user', tier: 'basic', status: 'active', createdAt: '2024-02-01', lastActive: '1 hour ago' },
+      { id: 4, username: 'john_doe', email: 'john@test.com', role: 'user', tier: 'premium', status: 'active', createdAt: '2024-02-10', lastActive: '30 min ago' },
+      { id: 5, username: 'suspended_user', email: 'bad@test.com', role: 'user', tier: 'basic', status: 'suspended', createdAt: '2024-01-20', lastActive: '3 days ago' },
+    ]
+
+    // Mock keys data
+    const mockKeys: LicenseKey[] = [
+      { id: 1, key: 'PREMIUM-2024-XXXX', tier: 'premium', createdBy: 'admin', createdAt: '2024-02-15', status: 'active' },
+      { id: 2, key: 'ULTIMATE-2024-YYYY', tier: 'ultimate', createdBy: 'admin', createdAt: '2024-02-14', status: 'used' },
+      { id: 3, key: 'BASIC-2024-ZZZZ', tier: 'basic', createdBy: 'admin', createdAt: '2024-02-13', status: 'active' },
+    ]
+
+    // Mock activity logs
+    const mockActivities: ActivityLog[] = [
+      { id: 1, userId: 2, username: 'beulrock', action: 'Login', details: 'Successful login from 192.168.1.1', timestamp: '2 min ago', ip: '192.168.1.1' },
+      { id: 2, userId: 4, username: 'john_doe', action: 'Script Execution', details: 'Executed Dark Dex in Blox Fruits', timestamp: '30 min ago', ip: '192.168.1.2' },
+      { id: 3, userId: 2, username: 'beulrock', action: 'Key Redeem', details: 'Redeemed key PREMIUM-2024-XXXX', timestamp: '1 hour ago', ip: '192.168.1.1' },
+      { id: 4, userId: 3, username: 'demo_user', action: 'Injection', details: 'Injected into Pet Simulator 99', timestamp: '1 hour ago', ip: '192.168.1.3' },
+      { id: 5, userId: 1, username: 'admin', action: 'Key Generated', details: 'Generated 3 new license keys', timestamp: '2 hours ago', ip: '192.168.1.100' },
+    ]
+
+    setStats({
+      totalUsers: mockUsers.length,
+      activeUsers: mockUsers.filter(u => u.status === 'active').length,
+      totalKeys: mockKeys.length,
+      todayActivity: mockActivities.length
+    })
+
+    setUsers(mockUsers)
+    setKeys(mockKeys)
+    setActivities(mockActivities)
+    setIsLoading(false)
+  }
 
   const generateKey = () => {
     const prefixes: Record<string, string> = {
@@ -422,7 +464,7 @@ export default function AdminPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <label className="text-gray-300">Key Tier</label>
+                  <Label className="text-gray-300">Key Tier</Label>
                   <div className="flex gap-2 mt-2">
                     {(['basic', 'premium', 'ultimate'] as const).map((tier) => (
                       <Button

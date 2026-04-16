@@ -56,6 +56,13 @@ export default function ExecutorPage() {
     { name: 'Infinite Jump', code: 'local InfiniteJumpEnabled = true\ngame:GetService("UserInputService").JumpRequest:connect(function()\n\tif InfiniteJumpEnabled then\n\t\tgame:GetService"Players".LocalPlayer.Character:FindFirstChildOfClass\'Humanoid\':ChangeState("Jumping")\n\tend\nend)' },
   ]
 
+  const addLog = (type: LogEntry['type'], message: string) => {
+    const now = new Date()
+    const timestamp = now.toLocaleTimeString('id-ID', { hour12: false })
+    const id = Date.now()
+    setLogs(prev => [...prev, { id, timestamp, type, message }])
+  }
+
   useEffect(() => {
     addLog('system', 'Executor initialized successfully')
     addLog('info', 'Ready for injection. Select a process to begin.')
@@ -70,13 +77,6 @@ export default function ExecutorPage() {
       }
     }
   }, [logs])
-
-  const addLog = (type: LogEntry['type'], message: string) => {
-    const now = new Date()
-    const timestamp = now.toLocaleTimeString('id-ID', { hour12: false })
-    const id = Date.now()
-    setLogs(prev => [...prev, { id, timestamp, type, message }])
-  }
 
   const handleInject = async () => {
     if (!selectedProcess) {
